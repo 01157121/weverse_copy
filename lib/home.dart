@@ -4,10 +4,14 @@ import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:just_audio/just_audio.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'artist.dart';
 import 'item.dart';
+
+// Add this line to access the global audio player
+import 'main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +35,9 @@ class _HomePageState extends State<HomePage> {
   final Dio _dio = Dio();
   late PersistCookieJar _cookieJar;
 
+  bool isMuted = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   @override
   void initState() {
     super.initState();
@@ -39,7 +46,8 @@ class _HomePageState extends State<HomePage> {
     final Directory appDocDir = Directory.systemTemp; // Use a temporary directory for simplicity
     _cookieJar = PersistCookieJar(storage: FileStorage('${appDocDir.path}/cookies'));
     _dio.interceptors.add(CookieManager(_cookieJar));
-
+    _audioPlayer.setVolume(1.0); // Initialize audio player volume
+    _fetchPromotions();
     _fetchPromotions();
     _fetchArtists();
     _fetchHotItems();
@@ -292,6 +300,19 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               const Spacer(),
+              IconButton(
+                icon: Icon(isMuted ? Icons.volume_off : Icons.volume_up),
+                onPressed: () {
+                  setState(() {
+                    isMuted = !isMuted;
+                    if (isMuted) {
+                      _audioPlayer.setVolume(0);
+                    } else {
+                      _audioPlayer.setVolume(1.0);
+                    }
+                  });
+                },
+              ),
               DropdownButton<String>(
                 value: selectedCurrency,
                 underline: Container(),
